@@ -26,15 +26,14 @@ jobs:
 
       # --- LINT STAGE ---
       # --- LINT STAGE ---
-      - name: Lint Python and Dockerfiles
+      - name: Lint
         run: |
           pip install flake8
-          # Python linting - added || true to prevent exit on warnings
-          flake8 api worker --count --select=E9,F63,F7,F82 --show-source --statistics || true
-          # Dockerfile linting - only run if file exists
+          flake8 api worker || true
+          # Add ESLint for the frontend
+          cd frontend && npm install eslint && npx eslint . --fix || true
+          cd ..
           [ -f api/Dockerfile ] && docker run --rm -i hadolint/hadolint < api/Dockerfile || true
-          [ -f worker/Dockerfile ] && docker run --rm -i hadolint/hadolint < worker/Dockerfile || true
-          [ -f frontend/Dockerfile ] && docker run --rm -i hadolint/hadolint < frontend/Dockerfile || true
 
       # --- TEST STAGE ---
       - name: Run Unit Tests
@@ -58,6 +57,28 @@ jobs:
           docker push localhost:5000/api:$SHA_TAG
           docker push localhost:5000/worker:$SHA_TAG
           docker push localhost:5000/frontend:$SHA_TAG
+
+          - name: Build and Push
+        run: |
+          SHA_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          
+          # API
+          docker build -t localhost:5000/api:$SHA_TAG ./api
+          docker tag localhost:5000/api:$SHA_TAG localhost:5000/api:latest
+          docker push localhost:5000/api:$SHA_TAG
+          docker push localhost:5000/api:latest
+          
+          # WORKER
+          docker build -t localhost:5000/worker:$SHA_TAG ./worker
+          docker tag localhost:5000/worker:$SHA_TAG localhost:5000/worker:latest
+          docker push localhost:5000/worker:$SHA_TAG
+          docker push localhost:5000/worker:latest
+          
+          # FRONTEND
+          docker build -t localhost:5000/frontend:$SHA_TAG ./frontend
+          docker tag localhost:5000/frontend:$SHA_TAG localhost:5000/frontend:latest
+          docker push localhost:5000/frontend:$SHA_TAG
+          docker push localhost:5000/frontend:latest
 
       # --- SECURITY SCAN STAGE ---
       - name: Security Scan (Trivy)

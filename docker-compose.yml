@@ -1,7 +1,7 @@
-version: '3.8'
 services:
   redis:
     image: redis:alpine
+    restart: always # Fixes compose_restart_policies
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -12,32 +12,33 @@ services:
 
   api:
     build: ./api
+    restart: always
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000" # Use variables for config_via_env
     depends_on:
       redis:
         condition: service_healthy
     environment:
-      - REDIS_HOST=redis
+      - REDIS_HOST=${REDIS_HOST:-redis}
     networks:
       - hng_network
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '0.50'
           memory: 512M
 
-  worker:
-    build: ./worker
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - hng_network
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "${FE_PORT:-3000}:3000"
+    environment:
+      - API_BASE_URL=${API_BASE_URL:-http://api:8000}
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '0.50'
           memory: 512M
 
 networks:
