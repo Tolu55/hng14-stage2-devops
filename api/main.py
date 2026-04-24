@@ -5,7 +5,8 @@ import os
 
 app = FastAPI()
 
-r = redis.Redis(host="redis", port=6379)
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+r = redis.Redis(host="REDIS_HOST", port=6379, db=0)
 
 @app.post("/jobs")
 def create_job():
@@ -23,4 +24,8 @@ def get_job(job_id: str):
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
+    try:
+        r.ping()
+        return {"status": "healthy"}
+    except:
+        return {"status": "unhealthy"}, 500

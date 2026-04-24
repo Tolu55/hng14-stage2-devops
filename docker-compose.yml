@@ -43,4 +43,4 @@ services:
 
 networks:
   hng_network:
-    name: hng_internal
+    name: hng_network
