@@ -15,21 +15,6 @@ services:
 
   api:
     build: ./api
-    restart: always
-    environment:
-      - REDIS_HOST=redis
-    depends_on:
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
-
-  worker:
-    build: ./worker
-    restart: always
     environment:
       - REDIS_HOST=redis
     depends_on:
@@ -43,7 +28,6 @@ services:
 
   frontend:
     build: ./frontend
-    restart: always
     ports:
       - "3000:3000"
     environment:
