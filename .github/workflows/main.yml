@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install pytest pytest-mock fastapi httpx redis pytest-cov
           cd api
-          pytest --cov=. --cov-report=xml
+          pytest -m pytest --cov=. --cov-report=xml #Added 'python -m'
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
